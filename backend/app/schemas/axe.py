@@ -1,6 +1,6 @@
 """
 Models describing raw axe-core output
-These represent scanner evidence exactly as received. 
+These represent scanner evidence exactly as received.
 Our own data (review status, priority, AI suggestions  lives in separate models)
 
 """

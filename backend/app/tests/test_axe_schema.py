@@ -1,27 +1,18 @@
-from pathlib import Path
-
 import pytest
 from pydantic import ValidationError
 
 from app.schemas.axe import AxeReport, AxeViolation
 
-FIXTURE_PATH = Path(__file__).parents[2] / "fixtures" / "sample_audit_axe.json"
 
-
-def load_sample_report() -> AxeReport:
-    raw_json = FIXTURE_PATH.read_text(encoding="utf-8")
-    return AxeReport.model_validate_json(raw_json)
-
-
-def test_sample_fixture_is_a_valid_axe_report():
-    report = load_sample_report()
+def test_sample_fixture_is_a_valid_axe_report(sample_axe_report: AxeReport):
+    report = sample_axe_report
 
     assert report.test_engine.name == "axe-core"
     assert len(report.violations) == 4
 
 
-def test_canel_case_json_maps_to_snake_case_fields():
-    report = load_sample_report()
+def test_canel_case_json_maps_to_snake_case_fields(sample_axe_report: AxeReport):
+    report = sample_axe_report
     first_violation = report.violations[0]
 
     assert str(first_violation.help_url).startswith("https://dequeuniversity.com/")
