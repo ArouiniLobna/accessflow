@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 
+from app.api.audits import router as audits_router
 from app.api.health import router as health_router
 
 app = FastAPI(
@@ -9,3 +10,4 @@ app = FastAPI(
 )
 
 app.include_router(health_router)
+app.include_router(audits_router)
