@@ -97,3 +97,17 @@ always gives the same result, which also means it's safe to retry.
 Bad input never reaches the triage code. The request models define what's valid,
 FastAPI returns a 422 listing every problem with its exact location, and the tests
 check the error type and location rather than the wording.
+
+## React and TypeScript for the frontend
+
+I picked React with TypeScript. It's what I've used most recently, it's what most AI
+product teams use, and it lets me spend my learning time on the backend and AI side
+rather than relearning a framework.
+
+## A dev proxy instead of CORS
+
+In development the frontend and backend run on different ports, which the browser
+treats as different sites. Instead of loosening the backend's CORS settings just for
+local work, Vite forwards API requests to the backend, so the browser only ever talks
+to one origin. The frontend uses relative URLs, which also matches how it will work
+if both are served from one domain later.
