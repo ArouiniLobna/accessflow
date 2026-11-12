@@ -32,3 +32,68 @@ aria-label" is fine, but on a team with a design system, the right fix is usuall
 "use our Button component with the label prop." So when retrieval comes in later,
 AccessFlow will draw on the team's own component docs as well as general
 accessibility guidance. Until then, nothing in the early milestones changes.
+
+## One issue per affected element
+
+axe groups results by rule, so "form elements must have labels" can cover several
+inputs at once. I split these into one issue per element, because that's how review
+and fixing actually happen: someone might confirm one input is broken and dismiss
+another as a false positive, and each fix is usually a separate change. Grouping
+by rule is easy to add back in the UI; splitting grouped data apart later is not.
+
+## Our own API shape, not axe's
+
+Scanner evidence is copied into AccessFlow's own models rather than passed straight
+through. If axe changes its output format, only the import code needs updating, and
+the API and frontend stay the same.
+
+## IDs that don't change between imports
+
+Issue IDs are built from the page, the rule and the element's selector, so importing
+the same scan twice gives the same IDs. This will matter later when comparing scans
+and when making sure the same GitHub issue never gets created twice.
+
+## Routes translate, services decide
+
+Route handlers stay thin: they get their inputs, call a service, and turn the result
+into an HTTP response. Services don't know HTTP exists. That keeps the logic testable
+without a server, and it means the same code can be called from somewhere else later,
+like an agent tool.
+
+## Errors are safe by default
+
+When something fails on our side, the client gets a short, generic message and a 500.
+File paths and stack traces stay in the server logs. There's a test that checks the
+error response never contains the file path.
+
+## Triage uses rules, not AI
+
+Prioritising issues is something a team needs to be able to trust and check, so it
+runs on a small set of fixed rules rather than a model. axe's impact level sets the
+starting priority, issues that aren't tied to a WCAG success criterion drop one level,
+and every result lists the reasons it got its priority. If the scanner didn't report
+an impact, the issue lands in the middle and is flagged for manual review, rather
+than being quietly ranked lowest.
+
+I kept the rules short on purpose. Weighting by WCAG level or by how many elements are
+affected might make sense later, but I'd rather add those once there's a real reason
+than guess at a policy now. AI will come in for explanations and fix suggestions,
+where language and judgement actually help.
+
+## Limits on what clients can send
+
+Triage requests are capped: at least one issue, at most 500, with length limits on
+IDs and a format check on WCAG criteria. Nothing else in the stack limits request
+size yet, and these values end up in explanations and, later, in prompts and GitHub
+issues, so it's worth stopping bad input at the door.
+
+## Triage is a POST that returns 200
+
+Triage takes a list of issues in the request body, so it's a POST: GET requests
+shouldn't carry a body, and the input is too big for a query string. It returns 200
+rather than 201 because nothing is stored. It's a calculation, and the same input
+always gives the same result, which also means it's safe to retry.
+
+Bad input never reaches the triage code. The request models define what's valid,
+FastAPI returns a 422 listing every problem with its exact location, and the tests
+check the error type and location rather than the wording.
