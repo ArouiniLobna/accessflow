@@ -1,7 +1,4 @@
-export type HealthResponse = {
-  status: "ok";
-  service: string;
-};
+import type { HealthResponse } from "./types";
 
 export async function fetchHealth(
   signal?: AbortSignal,

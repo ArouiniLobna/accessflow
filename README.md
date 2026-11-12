@@ -71,6 +71,13 @@ uv run fastapi dev app/main.py
 
 Then open http://127.0.0.1:8000/docs.
 
+## Tests and linting
+
+```bash
+uv run pytest
+uv run ruff check .
+```
+
 ## Running the frontend
 
 You'll need Node.js 20.19+ or 22.12+. With the backend running:
@@ -83,12 +90,19 @@ npm run dev
 
 Then open http://localhost:5173. Frontend tests run with `npm test`.
 
-## Tests and linting
+## Keeping the frontend in sync with the API
+
+If you change a backend model or endpoint, regenerate the frontend types:
 
 ```bash
-uv run pytest
-uv run ruff check .
+cd backend
+uv run python -m scripts.export_openapi
+cd ../frontend
+npm run generate:api
+npm run typecheck
 ```
+
+A backend test fails if `frontend/openapi.json` is out of date.
 
 ## How it's organised
 

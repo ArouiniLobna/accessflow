@@ -8,7 +8,14 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "vitest"
+    "test": "vitest",
+    "generate:api": "openapi-typescript openapi.json -o src/api/schema.d.ts",
+    "typecheck": "tsc -b"
+  },
+  "overrides": {
+    "openapi-typescript": {
+      "typescript": "$typescript"
+    }
   },
   "dependencies": {
     "react": "^19.3.1",
@@ -27,6 +34,7 @@
     "eslint-plugin-react-refresh": "^0.5.7",
     "globals": "^17.13.0",
     "jsdom": "^31.0.0",
+    "openapi-typescript": "^7.13.0",
     "typescript": "~6.0.3",
     "typescript-eslint": "^8.72.1",
     "vite": "^8.3.6",

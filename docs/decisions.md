@@ -111,3 +111,16 @@ treats as different sites. Instead of loosening the backend's CORS settings just
 local work, Vite forwards API requests to the backend, so the browser only ever talks
 to one origin. The frontend uses relative URLs, which also matches how it will work
 if both are served from one domain later.
+
+## Frontend types are generated from the backend
+
+The Pydantic models are the API contract, so the frontend shouldn't have its own
+hand-written copies that can drift. A small script exports FastAPI's OpenAPI schema
+to `frontend/openapi.json`, and openapi-typescript turns it into TypeScript types.
+If the backend changes in a way that breaks the frontend, it shows up as a type
+error instead of a runtime bug.
+
+I'm generating types only, not a full API client. The fetch functions stay small and
+written by hand, which keeps them easy to read and explain. Both the schema and the
+generated types are committed, so contract changes show up in pull requests, and a
+backend test fails if the committed schema is out of date.

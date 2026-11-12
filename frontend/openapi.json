@@ -1,0 +1,452 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "AccessFlow Ai Api",
+    "description": "Accessibility audit triage API (step 1: deterministic, no AI).",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Health",
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/audits/sample": {
+      "get": {
+        "tags": [
+          "audits"
+        ],
+        "summary": "Get Sample Audit",
+        "operationId": "get_sample_audit_api_v1_audits_sample_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Audit"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/triage": {
+      "post": {
+        "tags": [
+          "triage"
+        ],
+        "summary": "Triage",
+        "operationId": "triage_api_v1_triage_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TriageRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TriageResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Audit": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "page_url": {
+            "type": "string",
+            "title": "Page Url"
+          },
+          "scanned_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Scanned At"
+          },
+          "engine": {
+            "type": "string",
+            "title": "Engine"
+          },
+          "issues": {
+            "items": {
+              "$ref": "#/components/schemas/Issue"
+            },
+            "type": "array",
+            "title": "Issues"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "page_url",
+          "scanned_at",
+          "engine",
+          "issues"
+        ],
+        "title": "Audit"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "HealthResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "const": "ok",
+            "title": "Status"
+          },
+          "service": {
+            "type": "string",
+            "title": "Service"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "service"
+        ],
+        "title": "HealthResponse"
+      },
+      "Issue": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "rule_id": {
+            "type": "string",
+            "title": "Rule Id"
+          },
+          "impact": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "minor",
+                  "moderate",
+                  "serious",
+                  "critical"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Impact"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "help_url": {
+            "type": "string",
+            "maxLength": 2083,
+            "minLength": 1,
+            "format": "uri",
+            "title": "Help Url"
+          },
+          "wcag_criteria": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Wcag Criteria"
+          },
+          "evidence": {
+            "$ref": "#/components/schemas/IssueEvidence"
+          },
+          "review_status": {
+            "type": "string",
+            "enum": [
+              "unreviewed",
+              "confirmed",
+              "dismissed"
+            ],
+            "title": "Review Status",
+            "default": "unreviewed"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "rule_id",
+          "impact",
+          "title",
+          "description",
+          "help_url",
+          "wcag_criteria",
+          "evidence"
+        ],
+        "title": "Issue"
+      },
+      "IssueEvidence": {
+        "properties": {
+          "html": {
+            "type": "string",
+            "title": "Html"
+          },
+          "target": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Target"
+          },
+          "failure_summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Failure Summary"
+          }
+        },
+        "type": "object",
+        "required": [
+          "html",
+          "target"
+        ],
+        "title": "IssueEvidence"
+      },
+      "TriageIssueInput": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Id"
+          },
+          "rule_id": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Rule Id"
+          },
+          "impact": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "minor",
+                  "moderate",
+                  "serious",
+                  "critical"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Impact"
+          },
+          "wcag_criteria": {
+            "items": {
+              "type": "string",
+              "pattern": "^\\d\\.\\d\\.\\d{1,2}$"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "title": "Wcag Criteria"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "rule_id",
+          "impact"
+        ],
+        "title": "TriageIssueInput"
+      },
+      "TriageRequest": {
+        "properties": {
+          "issues": {
+            "items": {
+              "$ref": "#/components/schemas/TriageIssueInput"
+            },
+            "type": "array",
+            "maxItems": 500,
+            "minItems": 1,
+            "title": "Issues"
+          }
+        },
+        "type": "object",
+        "required": [
+          "issues"
+        ],
+        "title": "TriageRequest"
+      },
+      "TriageResponse": {
+        "properties": {
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/TriageResult"
+            },
+            "type": "array",
+            "title": "Results"
+          },
+          "counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "propertyNames": {
+              "enum": [
+                "P1",
+                "P2",
+                "P3",
+                "P4"
+              ]
+            },
+            "type": "object",
+            "title": "Counts"
+          }
+        },
+        "type": "object",
+        "required": [
+          "results",
+          "counts"
+        ],
+        "title": "TriageResponse"
+      },
+      "TriageResult": {
+        "properties": {
+          "issue_id": {
+            "type": "string",
+            "title": "Issue Id"
+          },
+          "priority": {
+            "type": "string",
+            "enum": [
+              "P1",
+              "P2",
+              "P3",
+              "P4"
+            ],
+            "title": "Priority"
+          },
+          "reasons": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Reasons"
+          }
+        },
+        "type": "object",
+        "required": [
+          "issue_id",
+          "priority",
+          "reasons"
+        ],
+        "title": "TriageResult"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}
