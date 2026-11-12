@@ -124,3 +124,38 @@ I'm generating types only, not a full API client. The fetch functions stay small
 written by hand, which keeps them easy to read and explain. Both the schema and the
 generated types are committed, so contract changes show up in pull requests, and a
 backend test fails if the committed schema is out of date.
+
+## TanStack Query for server data
+
+The summary, issue list and detail view all need the same audit, and errors need a
+retry. I'd already written one request by hand with useEffect and an AbortController,
+and saw how many details it needs to get right. TanStack Query handles caching,
+sharing one request between components, cancellation and retries, much like Apollo
+does for GraphQL. There's no global state library: server data lives in the query
+cache and UI state stays in components.
+
+## Loading states are announced, not just shown
+
+Each section has one status message that's always on the page and changes text as
+data loads, fails or retries, so screen reader users hear what happened. An empty
+audit doesn't just say "no issues": it says automated checks can't catch everything,
+because that's exactly when someone might wrongly assume their page is accessible.
+
+## Imported URLs are shown as text
+
+The audited page URL comes from an imported file, so it's displayed as plain text
+rather than a link. A link built from untrusted data could run code if it used a
+`javascript:` URL. If it needs to be clickable later, it'll be checked first.
+
+## The issue list is a real data table
+
+Issues are shown in a proper HTML table: a caption that names it, column headers, and
+the issue title as each row's header, so screen reader users always hear which issue
+a cell belongs to. Impact is always written as a word, never shown only by colour.
+The table sits in a focusable, named region so keyboard users can scroll it when it's
+wider than the screen.
+
+Issues are listed most severe first. Issues without a reported impact go between
+moderate and minor, the same reasoning as the triage rules: don't bury them, don't
+inflate them. The list doesn't announce loading or errors itself, because the audit
+summary already does, and hearing everything twice would be worse.

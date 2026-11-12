@@ -1,17 +1,18 @@
 import type { UseQueryResult } from "@tanstack/react-query";
 
 import type { Audit } from "../api/types";
-import { IMPACT_LABELS, IMPACT_ORDER, countIssuesByImpact } from "./summary";
+import {
+  IMPACT_LABELS,
+  IMPACT_ORDER,
+  countIssuesByImpact,
+  issueCountText,
+} from "./summary";
 import { useSampleAudit } from "./useSampleAudit";
 
 const dateFormatter = new Intl.DateTimeFormat(undefined, {
   dateStyle: "medium",
   timeStyle: "short",
 });
-
-function issueCountText(count: number): string {
-  return `${count} ${count === 1 ? "issue" : "issues"}`;
-}
 
 function statusMessage(query: UseQueryResult<Audit>): string {
   if (query.isPending) {

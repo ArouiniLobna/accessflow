@@ -31,3 +31,7 @@ export function countIssuesByImpact(issues: readonly Issue[]): ImpactCounts {
 
   return counts;
 }
+
+export function issueCountText(count: number): string {
+  return `${count} ${count === 1 ? "issue" : "issues"}`;
+}
