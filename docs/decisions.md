@@ -159,3 +159,16 @@ Issues are listed most severe first. Issues without a reported impact go between
 moderate and minor, the same reasoning as the triage rules: don't bury them, don't
 inflate them. The list doesn't announce loading or errors itself, because the audit
 summary already does, and hearing everything twice would be worse.
+
+## Filtering by impact
+
+Filters are native checkboxes in a fieldset, so people can pick several severities
+and it all works with a keyboard and screen reader without custom code. Each option
+shows how many issues it covers, so nobody clicks into an empty result by surprise.
+When the filters change, a status message announces how many issues are now shown.
+If nothing matches, the table goes away but the filters stay exactly where they were,
+so focus isn't lost and getting back is one click.
+
+Filter state lives in the issue list component for now, since it's UI state and not
+server data. Once there's routing, I'll consider moving it into the URL so a filtered
+view can be bookmarked or shared.

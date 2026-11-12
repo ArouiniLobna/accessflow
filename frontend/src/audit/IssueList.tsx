@@ -1,24 +1,70 @@
+import { useState } from "react";
+
 import type { Issue } from "../api/types";
-import { formatTarget, sortIssuesByImpact } from "./issues";
-import { IMPACT_LABELS, issueCountText } from "./summary";
+import { ImpactFilter } from "./ImpactFilter";
+import type { ImpactOrUnknown } from "./issues";
+import {
+  IMPACT_FILTER_ORDER,
+  filterIssuesByImpact,
+  formatTarget,
+  sortIssuesByImpact,
+} from "./issues";
+import { IMPACT_LABELS, countIssuesByImpact, issueCountText } from "./summary";
 import { useSampleAudit } from "./useSampleAudit";
 
 export function IssueList() {
   const query = useSampleAudit();
+  const [selectedImpacts, setSelectedImpacts] = useState<
+    ReadonlySet<ImpactOrUnknown>
+  >(() => new Set(IMPACT_FILTER_ORDER));
 
   if (!query.isSuccess) {
     return null;
   }
 
-  const issues = sortIssuesByImpact(query.data.issues);
+  function toggleImpact(impact: ImpactOrUnknown) {
+    setSelectedImpacts((current) => {
+      const next = new Set(current);
+      if (next.has(impact)) {
+        next.delete(impact);
+      } else {
+        next.add(impact);
+      }
+      return next;
+    });
+  }
+
+  const allIssues = query.data.issues;
+  const counts = countIssuesByImpact(allIssues);
+  const visibleIssues = sortIssuesByImpact(
+    filterIssuesByImpact(allIssues, selectedImpacts),
+  );
 
   return (
     <section aria-labelledby="issue-list-heading">
       <h2 id="issue-list-heading">Issues</h2>
-      {issues.length === 0 ? (
+
+      {allIssues.length === 0 ? (
         <p>No issues to list.</p>
       ) : (
-        <IssueTable issues={issues} />
+        <>
+          <ImpactFilter
+            counts={counts}
+            selected={selectedImpacts}
+            onToggle={toggleImpact}
+          />
+
+          <p role="status">
+            Showing {visibleIssues.length} of {issueCountText(allIssues.length)}
+            .
+          </p>
+
+          {visibleIssues.length === 0 ? (
+            <p>No issues match the selected impact levels.</p>
+          ) : (
+            <IssueTable issues={visibleIssues} />
+          )}
+        </>
       )}
     </section>
   );

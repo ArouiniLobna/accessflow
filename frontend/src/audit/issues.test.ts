@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 
 import { makeIssue } from "../test/fixtures";
-import { formatTarget, sortIssuesByImpact } from "./issues";
+import {
+  filterIssuesByImpact,
+  formatTarget,
+  sortIssuesByImpact,
+} from "./issues";
 
 describe("sortIssuesByImpact", () => {
   it("puts the most severe first and unreported impact between moderate and minor", () => {
@@ -51,5 +55,28 @@ describe("formatTarget", () => {
     [[["my-date-picker", "button.next"]], "my-date-picker / button.next"],
   ])("formats %j as %s", (target, expected) => {
     expect(formatTarget(target)).toEqual(expected);
+  });
+});
+
+describe("filterIssuesByImpact", () => {
+  const issues = [
+    makeIssue({ id: "critical", impact: "critical" }),
+    makeIssue({ id: "minor", impact: "minor" }),
+    makeIssue({ id: "unknown", impact: null }),
+  ];
+
+  it("keeps only issues with a selected impact", () => {
+    const result = filterIssuesByImpact(
+      issues,
+      new Set(["critical", "minor"] as const),
+    );
+
+    expect(result.map((i) => i.id)).toEqual(["critical", "minor"]);
+  });
+
+  it("treats a missing impact as the 'unknown' option", () => {
+    const result = filterIssuesByImpact(issues, new Set(["unknown"] as const));
+
+    expect(result.map((i) => i.id)).toEqual(["unknown"]);
   });
 });
