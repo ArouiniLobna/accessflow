@@ -1,4 +1,4 @@
-[![CI status](https://github.com/<your-username>/accessflow/actions/workflows/ci.yml/badge.svg)](https://github.com/<your-username>/accessflow/actions/workflows/ci.yml)
+[![CI status](https://github.com/ArouiniLobna/accessflow/actions/workflows/ci.yml/badge.svg)](https://github.com/ArouiniLobna/accessflow/actions/workflows/ci.yml)
 
 # AccessFlow AI
 
