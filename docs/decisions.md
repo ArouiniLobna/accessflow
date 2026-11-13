@@ -258,3 +258,17 @@ a scan result is a snapshot, and a new scan would be a new audit.
 
 If priorities can't be calculated, the issue list still works. The column says
 "Unavailable", the status message explains, and there's a button to try again.
+
+## Testing the app's own accessibility
+
+The test suite runs axe-core, the same engine AccessFlow imports results from, on
+every screen state, including loading, errors and empty results, since those are the
+states that get looked at least. I use axe-core directly through a small helper
+rather than a wrapper library, so the failure output lists the rule and the failing
+elements in plain text.
+
+Two rules are turned off in those tests, and only two: colour contrast, because the
+simulated browser can't compute rendered colours, and landmarks, because the tests
+render parts of the page on their own. Both are checked by hand, along with keyboard
+use, screen reader output, zoom, reflow and contrast themes, and the results are
+written down in docs/accessibility-testing.md.
