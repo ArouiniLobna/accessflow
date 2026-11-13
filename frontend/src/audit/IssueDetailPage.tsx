@@ -1,5 +1,6 @@
-import { Link, useParams } from "react-router";
-
+import type { MouseEvent } from "react";
+import { Link, useLocation, useNavigate, useParams } from "react-router";
+import { cameFromList } from "./navigationState";
 import type { Issue, ReviewStatus } from "../api/types";
 import { PageHeading } from "../layout/PageHeading";
 import { usePageTitle } from "../layout/usePageTitle";
@@ -21,15 +22,21 @@ export function IssueDetailPage() {
     const issue = query.data.issues.find(
       (candidate) => candidate.id === issueId,
     );
-    return issue ? (
-      <IssueDetails key={issue.id} issue={issue} />
-    ) : (
-      <IssueNotFound />
+    return (
+      <>
+        <BackToList />
+        {issue ? (
+          <IssueDetails key={issue.id} issue={issue} />
+        ) : (
+          <IssueNotFound />
+        )}
+      </>
     );
   }
 
   return (
     <>
+      <BackToList />
       <p role="status">
         {query.isError ? "The audit couldn't be loaded." : "Loading issue…"}
       </p>
@@ -38,9 +45,6 @@ export function IssueDetailPage() {
           Try again
         </button>
       )}
-      <p>
-        <Link to="/">Back to all issues</Link>
-      </p>
     </>
   );
 }
@@ -51,9 +55,6 @@ function IssueDetails({ issue }: { issue: Issue }) {
 
   return (
     <>
-      <p>
-        <Link to="/">Back to all issues</Link>
-      </p>
       <PageHeading>{issue.title}</PageHeading>
 
       <section aria-labelledby="scanner-heading">
@@ -127,9 +128,34 @@ function IssueNotFound() {
         This issue isn't in the current audit. The link may be from a different
         scan.
       </p>
-      <p>
-        <Link to="/">Back to all issues</Link>
-      </p>
     </>
+  );
+}
+
+function BackToList() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const fromList = cameFromList(location.state);
+
+  function handleClick(event: MouseEvent<HTMLAnchorElement>) {
+    const opensElsewhere =
+      event.button !== 0 ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey;
+
+    if (fromList && !opensElsewhere) {
+      event.preventDefault();
+      navigate(-1);
+    }
+  }
+
+  return (
+    <p>
+      <Link to="/" onClick={handleClick}>
+        Back to all issues
+      </Link>
+    </p>
   );
 }

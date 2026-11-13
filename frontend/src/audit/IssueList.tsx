@@ -1,53 +1,76 @@
-import { useState } from "react";
-import { Link } from "react-router";
+import { useEffect, useRef, type RefObject } from "react";
+import { Link, useLocation, useSearchParams } from "react-router";
+
 import type { Issue } from "../api/types";
 import { ImpactFilter } from "./ImpactFilter";
 import type { ImpactOrUnknown, SortKey, SortState } from "./issues";
 import {
-  DEFAULT_SORT,
-  IMPACT_FILTER_ORDER,
   describeSort,
   filterIssuesByImpact,
   formatTarget,
   nextSort,
   sortIssues,
 } from "./issues";
+import { parseListView, serializeListView, type ListView } from "./listView";
+import {
+  readReturnFocusTo,
+  type IssueEntryState,
+  type ListEntryState,
+} from "./navigationState";
 import { SortableHeader } from "./SortableHeader";
 import { IMPACT_LABELS, countIssuesByImpact, issueCountText } from "./summary";
 import { useSampleAudit } from "./useSampleAudit";
 
+const FROM_LIST: IssueEntryState = { fromList: true };
+
 export function IssueList() {
   const query = useSampleAudit();
-  const [selectedImpacts, setSelectedImpacts] = useState<
-    ReadonlySet<ImpactOrUnknown>
-  >(() => new Set(IMPACT_FILTER_ORDER));
-  const [sort, setSort] = useState<SortState>(DEFAULT_SORT);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const location = useLocation();
+  const returnFocusTo = readReturnFocusTo(location.state);
+  const returnLinkRef = useRef<HTMLAnchorElement>(null);
+  const isLoaded = query.isSuccess;
+
+  useEffect(() => {
+    if (isLoaded) {
+      returnLinkRef.current?.focus();
+    }
+  }, [isLoaded, returnFocusTo]);
 
   if (!query.isSuccess) {
     return null;
   }
 
+  const view = parseListView(searchParams);
+
+  function updateView(next: ListView) {
+    setSearchParams(serializeListView(next), { replace: true });
+  }
+
   function toggleImpact(impact: ImpactOrUnknown) {
-    setSelectedImpacts((current) => {
-      const next = new Set(current);
-      if (next.has(impact)) {
-        next.delete(impact);
-      } else {
-        next.add(impact);
-      }
-      return next;
-    });
+    const impacts = new Set(view.impacts);
+    if (impacts.has(impact)) {
+      impacts.delete(impact);
+    } else {
+      impacts.add(impact);
+    }
+    updateView({ ...view, impacts });
   }
 
   function changeSort(key: SortKey) {
-    setSort((current) => nextSort(current, key));
+    updateView({ ...view, sort: nextSort(view.sort, key) });
+  }
+
+  function rememberOpenedIssue(issueId: string) {
+    const state: ListEntryState = { returnFocusTo: issueId };
+    setSearchParams(searchParams, { replace: true, state });
   }
 
   const allIssues = query.data.issues;
   const counts = countIssuesByImpact(allIssues);
   const visibleIssues = sortIssues(
-    filterIssuesByImpact(allIssues, selectedImpacts),
-    sort,
+    filterIssuesByImpact(allIssues, view.impacts),
+    view.sort,
   );
 
   return (
@@ -60,13 +83,13 @@ export function IssueList() {
         <>
           <ImpactFilter
             counts={counts}
-            selected={selectedImpacts}
+            selected={view.impacts}
             onToggle={toggleImpact}
           />
 
           <p role="status">
             Showing {visibleIssues.length} of {issueCountText(allIssues.length)}
-            . Sorted {describeSort(sort)}.
+            . Sorted {describeSort(view.sort)}.
           </p>
 
           {visibleIssues.length === 0 ? (
@@ -74,8 +97,11 @@ export function IssueList() {
           ) : (
             <IssueTable
               issues={visibleIssues}
-              sort={sort}
+              sort={view.sort}
               onSort={changeSort}
+              onOpenIssue={rememberOpenedIssue}
+              returnFocusTo={returnFocusTo}
+              returnLinkRef={returnLinkRef}
             />
           )}
         </>
@@ -88,9 +114,19 @@ type IssueTableProps = {
   issues: Issue[];
   sort: SortState;
   onSort: (key: SortKey) => void;
+  onOpenIssue: (issueId: string) => void;
+  returnFocusTo: string | undefined;
+  returnLinkRef: RefObject<HTMLAnchorElement | null>;
 };
 
-function IssueTable({ issues, sort, onSort }: IssueTableProps) {
+function IssueTable({
+  issues,
+  sort,
+  onSort,
+  onOpenIssue,
+  returnFocusTo,
+  returnLinkRef,
+}: IssueTableProps) {
   return (
     <div
       className="table-scroll"
@@ -124,7 +160,12 @@ function IssueTable({ issues, sort, onSort }: IssueTableProps) {
           {issues.map((issue) => (
             <tr key={issue.id}>
               <th scope="row">
-                <Link to={`/issues/${encodeURIComponent(issue.id)}`}>
+                <Link
+                  to={`/issues/${encodeURIComponent(issue.id)}`}
+                  state={FROM_LIST}
+                  ref={issue.id === returnFocusTo ? returnLinkRef : undefined}
+                  onClick={() => onOpenIssue(issue.id)}
+                >
                   {issue.title}
                 </Link>
               </th>

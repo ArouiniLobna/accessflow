@@ -212,3 +212,26 @@ clearly labelled sections.
 
 The rule documentation link is only made clickable if it's an http or https address,
 even though the backend already validates it. Anything else is shown as plain text.
+
+## The list's view lives in the address
+
+Filters and sort are stored in the URL, like `/?impact=critical&sort=title`, so a view
+survives a reload, works with the Back button and can be shared. The address is
+treated as user input: anything unrecognised is ignored and falls back to the
+default. The default view is plain `/`, and options are written in a fixed order so
+the same view always has the same address.
+
+Changing a filter or sort replaces the current history entry instead of adding one,
+so Back takes you to the previous page, not the previous checkbox click.
+
+## Going back returns you to where you were
+
+When you open an issue, the list remembers which one in its own history entry. When
+you come back, focus goes to that issue's link instead of the top of the page. This
+matters most for keyboard and screen reader users, who can't just look to see where
+they were.
+
+"Back to all issues" goes back in history when you came from the list, so it behaves
+exactly like the browser's Back button and doesn't stack up extra history entries.
+If you opened the issue from a shared link, it goes to the list instead. Ctrl-click
+and middle-click still open the list in a new tab.

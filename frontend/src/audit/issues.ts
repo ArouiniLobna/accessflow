@@ -41,7 +41,7 @@ export function formatTarget(target: Issue["evidence"]["target"]): string {
     .join(" / ");
 }
 
-const FIRST_DIRECTION: Record<SortKey, SortDirection> = {
+export const FIRST_DIRECTION: Record<SortKey, SortDirection> = {
   impact: "descending",
   title: "ascending",
 };

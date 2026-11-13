@@ -1,0 +1,49 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Run list navigation tests",
+			"type": "shell",
+			"command": "npm",
+			"args": [
+				"--prefix",
+				"frontend",
+				"test",
+				"--",
+				"--run",
+				"src/audit/ListNavigation.test.tsx"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "Inspect shared link state test",
+			"type": "shell",
+			"command": "npm",
+			"args": [
+				"--prefix",
+				"frontend",
+				"test",
+				"--",
+				"--run",
+				"src/audit/ListNavigation.test.tsx",
+				"-t",
+				"goes to the list's start"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "Run navigation tests with state",
+			"type": "shell",
+			"command": "npm",
+			"args": [
+				"--prefix",
+				"frontend",
+				"test",
+				"--",
+				"--run",
+				"src/audit/ListNavigation.test.tsx"
+			],
+			"isBackground": false
+		}
+	]
+}
