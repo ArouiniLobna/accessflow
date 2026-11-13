@@ -1,3 +1,5 @@
+[![CI status](https://github.com/<your-username>/accessflow/actions/workflows/ci.yml/badge.svg)](https://github.com/<your-username>/accessflow/actions/workflows/ci.yml)
+
 # AccessFlow AI
 
 Accessibility scanners like axe-core are great at finding problems, but the hard part
