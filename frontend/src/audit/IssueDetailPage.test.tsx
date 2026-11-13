@@ -3,8 +3,14 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, expect, it, vi } from "vitest";
 
 import { AppRoutes } from "../AppRoutes";
-import { jsonResponse, makeAudit, makeIssue } from "../test/fixtures";
+import {
+  jsonResponse,
+  makeAudit,
+  makeIssue,
+  makeTriageResponse,
+} from "../test/fixtures";
 import { renderWithProviders } from "../test/renderWithProviders";
+import { mockFetch, requestsTo } from "../test/mockFetch";
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -80,9 +86,13 @@ it("explains when the issue isn't in the audit", async () => {
 
 it("opens an issue from the list without fetching the audit again", async () => {
   const user = userEvent.setup();
-  const fetchSpy = mockAudit([
+  const issues = [
     makeIssue({ id: "abc", title: "Form elements must have labels" }),
-  ]);
+  ];
+  const spy = mockFetch({
+    "/api/v1/audits/sample": () => jsonResponse(makeAudit({ issues })),
+    "/api/v1/triage": () => jsonResponse(makeTriageResponse(issues)),
+  });
 
   renderWithProviders(<AppRoutes />);
 
@@ -96,7 +106,8 @@ it("opens an issue from the list without fetching the audit again", async () => 
       name: "Form elements must have labels",
     }),
   ).toHaveFocus();
-  expect(fetchSpy).toHaveBeenCalledTimes(1);
+  expect(requestsTo(spy, "/api/v1/audits/sample")).toHaveLength(1);
+  expect(requestsTo(spy, "/api/v1/triage")).toHaveLength(1);
 });
 
 it("shows a not-found page for unknown addresses", async () => {

@@ -62,3 +62,6 @@ Things I know aren't there yet, so nobody has to discover them:
   issue you came from.
 - A production host will need to serve index.html for addresses like /issues/abc,
   or reloading a detail page will give a 404.
+- Audits with more than 500 issues can't be prioritised yet; the backend limits one
+  triage request to 500. Splitting large audits into batches would fix it.
+- Priority isn't sortable yet.

@@ -1,5 +1,7 @@
 import type { MouseEvent } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router";
+import type { UseQueryResult } from "@tanstack/react-query";
+import { useTriage, type TriageByIssue } from "./useTriage";
 import { cameFromList } from "./navigationState";
 import type { Issue, ReviewStatus } from "../api/types";
 import { PageHeading } from "../layout/PageHeading";
@@ -17,6 +19,7 @@ const REVIEW_STATUS_LABELS: Record<ReviewStatus, string> = {
 export function IssueDetailPage() {
   const { issueId } = useParams();
   const query = useSampleAudit();
+  const triage = useTriage(query.data);
 
   if (query.isSuccess) {
     const issue = query.data.issues.find(
@@ -26,7 +29,7 @@ export function IssueDetailPage() {
       <>
         <BackToList />
         {issue ? (
-          <IssueDetails key={issue.id} issue={issue} />
+          <IssueDetails key={issue.id} issue={issue} triage={triage} />
         ) : (
           <IssueNotFound />
         )}
@@ -49,7 +52,13 @@ export function IssueDetailPage() {
   );
 }
 
-function IssueDetails({ issue }: { issue: Issue }) {
+function IssueDetails({
+  issue,
+  triage,
+}: {
+  issue: Issue;
+  triage: UseQueryResult<TriageByIssue>;
+}) {
   usePageTitle(issue.title);
   const { evidence } = issue;
 
@@ -101,10 +110,46 @@ function IssueDetails({ issue }: { issue: Issue }) {
       <section aria-labelledby="accessflow-heading">
         <h2 id="accessflow-heading">Added by AccessFlow</h2>
         <dl>
+          <dt>Priority</dt>
+          <dd>
+            <PriorityDetails triage={triage} issueId={issue.id} />
+          </dd>
           <dt>Review status</dt>
           <dd>{REVIEW_STATUS_LABELS[issue.review_status ?? "unreviewed"]}</dd>
         </dl>
       </section>
+    </>
+  );
+}
+
+function PriorityDetails({
+  triage,
+  issueId,
+}: {
+  triage: UseQueryResult<TriageByIssue>;
+  issueId: string;
+}) {
+  if (triage.isError) {
+    return <>Couldn't be calculated.</>;
+  }
+  if (!triage.isSuccess) {
+    return <>Calculating…</>;
+  }
+
+  const result = triage.data.get(issueId);
+  if (!result) {
+    return <>Not available.</>;
+  }
+
+  return (
+    <>
+      <p>{result.priority}</p>
+      <p>Set by fixed rules, not AI. Why:</p>
+      <ul>
+        {result.reasons.map((reason) => (
+          <li key={reason}>{reason}</li>
+        ))}
+      </ul>
     </>
   );
 }

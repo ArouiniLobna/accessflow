@@ -1,6 +1,7 @@
 import { useEffect, useRef, type RefObject } from "react";
 import { Link, useLocation, useSearchParams } from "react-router";
-
+import type { UseQueryResult } from "@tanstack/react-query";
+import { useTriage, type TriageByIssue } from "./useTriage";
 import type { Issue } from "../api/types";
 import { ImpactFilter } from "./ImpactFilter";
 import type { ImpactOrUnknown, SortKey, SortState } from "./issues";
@@ -22,11 +23,24 @@ import { IMPACT_LABELS, countIssuesByImpact, issueCountText } from "./summary";
 import { useSampleAudit } from "./useSampleAudit";
 
 const FROM_LIST: IssueEntryState = { fromList: true };
+function priorityText(
+  triage: UseQueryResult<TriageByIssue>,
+  issueId: string,
+): string {
+  if (triage.isError) {
+    return "Unavailable";
+  }
+  if (!triage.isSuccess) {
+    return "Calculating…";
+  }
+  return triage.data.get(issueId)?.priority ?? "Unavailable";
+}
 
 export function IssueList() {
-  const query = useSampleAudit();
   const [searchParams, setSearchParams] = useSearchParams();
   const location = useLocation();
+  const query = useSampleAudit();
+  const triage = useTriage(query.data);
   const returnFocusTo = readReturnFocusTo(location.state);
   const returnLinkRef = useRef<HTMLAnchorElement>(null);
   const isLoaded = query.isSuccess;
@@ -90,7 +104,13 @@ export function IssueList() {
           <p role="status">
             Showing {visibleIssues.length} of {issueCountText(allIssues.length)}
             . Sorted {describeSort(view.sort)}.
+            {triage.isError && " Priorities couldn't be calculated."}
           </p>
+          {triage.isError && (
+            <button type="button" onClick={() => triage.refetch()}>
+              Try calculating priorities again
+            </button>
+          )}
 
           {visibleIssues.length === 0 ? (
             <p>No issues match the selected impact levels.</p>
@@ -102,6 +122,7 @@ export function IssueList() {
               onOpenIssue={rememberOpenedIssue}
               returnFocusTo={returnFocusTo}
               returnLinkRef={returnLinkRef}
+              priorityOf={(issueId) => priorityText(triage, issueId)}
             />
           )}
         </>
@@ -117,6 +138,7 @@ type IssueTableProps = {
   onOpenIssue: (issueId: string) => void;
   returnFocusTo: string | undefined;
   returnLinkRef: RefObject<HTMLAnchorElement | null>;
+  priorityOf: (issueId: string) => string;
 };
 
 function IssueTable({
@@ -125,6 +147,7 @@ function IssueTable({
   onSort,
   onOpenIssue,
   returnFocusTo,
+  priorityOf,
   returnLinkRef,
 }: IssueTableProps) {
   return (
@@ -152,6 +175,7 @@ function IssueTable({
               sort={sort}
               onSort={onSort}
             />
+            <th scope="col">Priority</th>
             <th scope="col">Element</th>
             <th scope="col">WCAG</th>
           </tr>
@@ -172,6 +196,7 @@ function IssueTable({
               <td>
                 {issue.impact ? IMPACT_LABELS[issue.impact] : "Not reported"}
               </td>
+              <td>{priorityOf(issue.id)}</td>
               <td>
                 <code>{formatTarget(issue.evidence.target)}</code>
               </td>

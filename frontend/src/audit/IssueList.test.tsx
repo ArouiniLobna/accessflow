@@ -1,10 +1,16 @@
 import { screen, within } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 
-import { jsonResponse, makeAudit, makeIssue } from "../test/fixtures";
+import {
+  jsonResponse,
+  makeAudit,
+  makeIssue,
+  makeTriageResponse,
+} from "../test/fixtures";
 import { renderWithProviders } from "../test/renderWithProviders";
 import { AuditSummary } from "./AuditSummary";
 import { IssueList } from "./IssueList";
+import { mockFetch, requestsTo } from "../test/mockFetch";
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -60,9 +66,11 @@ it("makes the scrollable table reachable by keyboard", async () => {
 });
 
 it("shares one request between the summary and the list", async () => {
-  const fetchSpy = vi
-    .spyOn(globalThis, "fetch")
-    .mockResolvedValue(jsonResponse(makeAudit()));
+  const audit = makeAudit();
+  const spy = mockFetch({
+    "/api/v1/audits/sample": () => jsonResponse(audit),
+    "/api/v1/triage": () => jsonResponse(makeTriageResponse(audit.issues)),
+  });
 
   renderWithProviders(
     <>
@@ -72,5 +80,5 @@ it("shares one request between the summary and the list", async () => {
   );
 
   await screen.findByRole("table");
-  expect(fetchSpy).toHaveBeenCalledTimes(1);
+  expect(requestsTo(spy, "/api/v1/audits/sample")).toHaveLength(1);
 });

@@ -1,4 +1,4 @@
-import type { Audit, Issue } from "../api/types";
+import type { Audit, Issue, Priority, TriageResponse } from "../api/types";
 
 export function makeIssue(overrides: Partial<Issue> = {}): Issue {
   return {
@@ -35,4 +35,21 @@ export function jsonResponse(body: unknown, status = 200): Response {
     status,
     headers: { "Content-Type": "application/json" },
   });
+}
+
+export function makeTriageResponse(
+  issues: readonly Issue[],
+  priority: Priority = "P1",
+): TriageResponse {
+  const counts = { P1: 0, P2: 0, P3: 0, P4: 0 };
+  counts[priority] = issues.length;
+
+  return {
+    results: issues.map((issue) => ({
+      issue_id: issue.id,
+      priority,
+      reasons: ["Test reason."],
+    })),
+    counts,
+  };
 }

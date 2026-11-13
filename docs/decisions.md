@@ -235,3 +235,26 @@ they were.
 exactly like the browser's Back button and doesn't stack up extra history entries.
 If you opened the issue from a shared link, it goes to the list instead. Ctrl-click
 and middle-click still open the list in a new tab.
+
+## Priorities come from the backend, shown with their reasons
+
+The frontend never recalculates priorities: the rules live in the backend's triage
+service, so the UI, the API and later the agent can't disagree. The list shows each
+issue's priority, and the issue page shows the reasons and says plainly that the
+priority comes from fixed rules, not AI.
+
+Only the fields triage needs are sent, so evidence HTML from the scanned page isn't
+sent anywhere it isn't needed. An empty audit isn't sent at all, because the backend
+would reject it.
+
+## Triage is a query, even though it's a POST
+
+TanStack Query splits reading from changing, not GET from POST. Triage changes
+nothing on the server and always gives the same answer for the same audit, so it's
+cached and shared like any other read. Audits and their priorities never go stale:
+a scan result is a snapshot, and a new scan would be a new audit.
+
+## Optional extras fail softly
+
+If priorities can't be calculated, the issue list still works. The column says
+"Unavailable", the status message explains, and there's a button to try again.
