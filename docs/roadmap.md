@@ -57,3 +57,8 @@ Things I know aren't there yet, so nobody has to discover them:
 | Agentic workflows    | To learn             | Not started                                               | —                                |
 | AI evaluation        | To learn             | Not started                                               | —                                |
 | Azure                | To learn             | Not started                                               | —                                |
+
+- Going back from an issue to the list puts focus on the page heading, not on the
+  issue you came from.
+- A production host will need to serve index.html for addresses like /issues/abc,
+  or reloading a detail page will give a 404.

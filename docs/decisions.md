@@ -172,3 +172,43 @@ so focus isn't lost and getting back is one click.
 Filter state lives in the issue list component for now, since it's UI state and not
 server data. Once there's routing, I'll consider moving it into the URL so a filtered
 view can be bookmarked or shared.
+
+## Sortable columns
+
+Only the Issue and Impact columns can be sorted. Sorting CSS selectors or a list of
+WCAG criteria doesn't help anyone, and every extra control is one more tab stop.
+
+Each sortable header contains a real button, so it works with Enter and Space and is
+announced as a button. The sort direction is set with aria-sort on the sorted column
+only. The arrow icon is hidden from screen readers so the column is just called
+"Impact", because that name is read out with every cell in the column. Screen readers
+don't reliably announce aria-sort changes, so the status message also says how the
+list is sorted.
+
+Clicking a column uses its natural first direction (most severe first for impact,
+A to Z for titles), and clicking it again flips it. Issues that tie keep their
+original order in both directions.
+
+## Issue details get their own page
+
+Each issue has its own address, `/issues/<id>`, so it can be bookmarked or shared and
+the Back button works. Because issue IDs are stable, the same issue keeps the same
+address every time the same scan is imported. I use React Router in its simplest
+mode, just mapping addresses to pages; data loading stays with TanStack Query, so
+opening an issue from the list doesn't fetch anything again.
+
+When a page opens, its main heading takes focus and the tab title changes, so screen
+reader users hear that the page changed instead of silence.
+
+## Scanner evidence is shown as text, never rendered
+
+The offending HTML from the scan is displayed as text inside a code block. Rendering
+it would let a crafted audit file run its own scripts in the app. A test checks that
+HTML with an onerror handler shows up as text and creates no element. The detail page
+also keeps what the scanner reported separate from what AccessFlow adds, under two
+clearly labelled sections.
+
+## Links built from data are checked first
+
+The rule documentation link is only made clickable if it's an http or https address,
+even though the backend already validates it. Anything else is shown as plain text.

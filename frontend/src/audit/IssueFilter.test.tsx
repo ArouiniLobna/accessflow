@@ -2,7 +2,7 @@ import { fireEvent, screen } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 
 import { jsonResponse, makeAudit, makeIssue } from "../test/fixtures";
-import { renderWithQueryClient } from "../test/renderWithQueryClient";
+import { renderWithProviders } from "../test/renderWithProviders";
 import { IssueList } from "./IssueList";
 
 const audit = makeAudit({
@@ -22,7 +22,7 @@ afterEach(() => {
 });
 
 it("shows counts in each filter option", async () => {
-  renderWithQueryClient(<IssueList />);
+  renderWithProviders(<IssueList />);
 
   expect(
     await screen.findByRole("checkbox", { name: "Critical (2)" }),
@@ -36,7 +36,7 @@ it("shows counts in each filter option", async () => {
 });
 
 it("hides unchecked impacts and announces the new count", async () => {
-  renderWithQueryClient(<IssueList />);
+  renderWithProviders(<IssueList />);
 
   fireEvent.click(
     await screen.findByRole("checkbox", { name: "Critical (2)" }),
@@ -54,7 +54,7 @@ it("hides unchecked impacts and announces the new count", async () => {
 });
 
 it("keeps the filters available when nothing matches", async () => {
-  renderWithQueryClient(<IssueList />);
+  renderWithProviders(<IssueList />);
 
   fireEvent.click(
     await screen.findByRole("checkbox", { name: "Critical (2)" }),

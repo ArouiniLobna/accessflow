@@ -4,10 +4,13 @@ import { makeIssue } from "../test/fixtures";
 import {
   filterIssuesByImpact,
   formatTarget,
-  sortIssuesByImpact,
+  sortIssues,
+  DEFAULT_SORT,
+  nextSort,
+  describeSort,
 } from "./issues";
 
-describe("sortIssuesByImpact", () => {
+describe("sortIssues", () => {
   it("puts the most severe first and unreported impact between moderate and minor", () => {
     const issues = [
       makeIssue({ id: "minor", impact: "minor" }),
@@ -16,7 +19,7 @@ describe("sortIssuesByImpact", () => {
       makeIssue({ id: "moderate", impact: "moderate" }),
     ];
 
-    expect(sortIssuesByImpact(issues).map((i) => i.id)).toEqual([
+    expect(sortIssues(issues, DEFAULT_SORT).map((i) => i.id)).toEqual([
       "critical",
       "moderate",
       "unknown",
@@ -30,7 +33,7 @@ describe("sortIssuesByImpact", () => {
       makeIssue({ id: "second", impact: "critical" }),
     ];
 
-    expect(sortIssuesByImpact(issues).map((i) => i.id)).toEqual([
+    expect(sortIssues(issues, DEFAULT_SORT).map((i) => i.id)).toEqual([
       "first",
       "second",
     ]);
@@ -42,7 +45,7 @@ describe("sortIssuesByImpact", () => {
       makeIssue({ id: "a", impact: "critical" }),
     ];
 
-    sortIssuesByImpact(issues);
+    sortIssues(issues, DEFAULT_SORT);
 
     expect(issues.map((i) => i.id)).toEqual(["b", "a"]);
   });
@@ -79,4 +82,61 @@ describe("filterIssuesByImpact", () => {
 
     expect(result.map((i) => i.id)).toEqual(["unknown"]);
   });
+});
+
+describe("sortIssues", () => {
+  const issues = [
+    makeIssue({ id: "b-minor", impact: "minor", title: "banana" }),
+    makeIssue({ id: "a-critical", impact: "critical", title: "Apple" }),
+    makeIssue({ id: "c-critical", impact: "critical", title: "cherry" }),
+  ];
+
+  it("sorts least severe first when ascending, keeping ties in order", () => {
+    const result = sortIssues(issues, {
+      key: "impact",
+      direction: "ascending",
+    });
+
+    expect(result.map((i) => i.id)).toEqual([
+      "b-minor",
+      "a-critical",
+      "c-critical",
+    ]);
+  });
+
+  it("keeps ties in their original order when descending too", () => {
+    const result = sortIssues(issues, DEFAULT_SORT);
+
+    expect(result.map((i) => i.id)).toEqual([
+      "a-critical",
+      "c-critical",
+      "b-minor",
+    ]);
+  });
+
+  it("sorts titles alphabetically regardless of capital letters", () => {
+    const result = sortIssues(issues, { key: "title", direction: "ascending" });
+
+    expect(result.map((i) => i.title)).toEqual(["Apple", "banana", "cherry"]);
+  });
+});
+
+describe("nextSort", () => {
+  it("flips direction when the same column is chosen again", () => {
+    expect(nextSort(DEFAULT_SORT, "impact")).toEqual({
+      key: "impact",
+      direction: "ascending",
+    });
+  });
+
+  it("uses the column's natural first direction when switching columns", () => {
+    expect(nextSort(DEFAULT_SORT, "title")).toEqual({
+      key: "title",
+      direction: "ascending",
+    });
+  });
+});
+
+it("describes the default sort in the existing wording", () => {
+  expect(describeSort(DEFAULT_SORT)).toBe("most severe first");
 });

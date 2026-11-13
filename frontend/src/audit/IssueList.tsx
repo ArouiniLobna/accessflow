@@ -1,14 +1,18 @@
 import { useState } from "react";
-
+import { Link } from "react-router";
 import type { Issue } from "../api/types";
 import { ImpactFilter } from "./ImpactFilter";
-import type { ImpactOrUnknown } from "./issues";
+import type { ImpactOrUnknown, SortKey, SortState } from "./issues";
 import {
+  DEFAULT_SORT,
   IMPACT_FILTER_ORDER,
+  describeSort,
   filterIssuesByImpact,
   formatTarget,
-  sortIssuesByImpact,
+  nextSort,
+  sortIssues,
 } from "./issues";
+import { SortableHeader } from "./SortableHeader";
 import { IMPACT_LABELS, countIssuesByImpact, issueCountText } from "./summary";
 import { useSampleAudit } from "./useSampleAudit";
 
@@ -17,6 +21,7 @@ export function IssueList() {
   const [selectedImpacts, setSelectedImpacts] = useState<
     ReadonlySet<ImpactOrUnknown>
   >(() => new Set(IMPACT_FILTER_ORDER));
+  const [sort, setSort] = useState<SortState>(DEFAULT_SORT);
 
   if (!query.isSuccess) {
     return null;
@@ -34,10 +39,15 @@ export function IssueList() {
     });
   }
 
+  function changeSort(key: SortKey) {
+    setSort((current) => nextSort(current, key));
+  }
+
   const allIssues = query.data.issues;
   const counts = countIssuesByImpact(allIssues);
-  const visibleIssues = sortIssuesByImpact(
+  const visibleIssues = sortIssues(
     filterIssuesByImpact(allIssues, selectedImpacts),
+    sort,
   );
 
   return (
@@ -56,13 +66,17 @@ export function IssueList() {
 
           <p role="status">
             Showing {visibleIssues.length} of {issueCountText(allIssues.length)}
-            .
+            . Sorted {describeSort(sort)}.
           </p>
 
           {visibleIssues.length === 0 ? (
             <p>No issues match the selected impact levels.</p>
           ) : (
-            <IssueTable issues={visibleIssues} />
+            <IssueTable
+              issues={visibleIssues}
+              sort={sort}
+              onSort={changeSort}
+            />
           )}
         </>
       )}
@@ -70,7 +84,13 @@ export function IssueList() {
   );
 }
 
-function IssueTable({ issues }: { issues: Issue[] }) {
+type IssueTableProps = {
+  issues: Issue[];
+  sort: SortState;
+  onSort: (key: SortKey) => void;
+};
+
+function IssueTable({ issues, sort, onSort }: IssueTableProps) {
   return (
     <div
       className="table-scroll"
@@ -80,12 +100,22 @@ function IssueTable({ issues }: { issues: Issue[] }) {
     >
       <table>
         <caption id="issue-table-caption">
-          {issueCountText(issues.length)}, most severe first
+          {issueCountText(issues.length)}, {describeSort(sort)}
         </caption>
         <thead>
           <tr>
-            <th scope="col">Issue</th>
-            <th scope="col">Impact</th>
+            <SortableHeader
+              label="Issue"
+              sortKey="title"
+              sort={sort}
+              onSort={onSort}
+            />
+            <SortableHeader
+              label="Impact"
+              sortKey="impact"
+              sort={sort}
+              onSort={onSort}
+            />
             <th scope="col">Element</th>
             <th scope="col">WCAG</th>
           </tr>
@@ -93,7 +123,11 @@ function IssueTable({ issues }: { issues: Issue[] }) {
         <tbody>
           {issues.map((issue) => (
             <tr key={issue.id}>
-              <th scope="row">{issue.title}</th>
+              <th scope="row">
+                <Link to={`/issues/${encodeURIComponent(issue.id)}`}>
+                  {issue.title}
+                </Link>
+              </th>
               <td>
                 {issue.impact ? IMPACT_LABELS[issue.impact] : "Not reported"}
               </td>

@@ -8,5 +8,6 @@ export function useSampleAudit() {
   return useQuery({
     queryKey: sampleAuditQueryKey,
     queryFn: ({ signal }) => fetchSampleAudit(signal),
+    staleTime: 30_000,
   });
 }

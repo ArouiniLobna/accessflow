@@ -2,7 +2,7 @@ import { screen, within } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 
 import { jsonResponse, makeAudit, makeIssue } from "../test/fixtures";
-import { renderWithQueryClient } from "../test/renderWithQueryClient";
+import { renderWithProviders } from "../test/renderWithProviders";
 import { AuditSummary } from "./AuditSummary";
 import { IssueList } from "./IssueList";
 
@@ -19,7 +19,7 @@ it("lists issues most severe first, with each title as its row header", async ()
   });
   vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse(audit));
 
-  renderWithQueryClient(<IssueList />);
+  renderWithProviders(<IssueList />);
 
   const table = await screen.findByRole("table", {
     name: "2 issues, most severe first",
@@ -37,7 +37,7 @@ it("explains missing impact and best-practice rules in words", async () => {
   });
   vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse(audit));
 
-  renderWithQueryClient(<IssueList />);
+  renderWithProviders(<IssueList />);
 
   await screen.findByRole("table");
   expect(
@@ -51,7 +51,7 @@ it("explains missing impact and best-practice rules in words", async () => {
 it("makes the scrollable table reachable by keyboard", async () => {
   vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse(makeAudit()));
 
-  renderWithQueryClient(<IssueList />);
+  renderWithProviders(<IssueList />);
 
   const region = await screen.findByRole("region", {
     name: "1 issue, most severe first",
@@ -64,7 +64,7 @@ it("shares one request between the summary and the list", async () => {
     .spyOn(globalThis, "fetch")
     .mockResolvedValue(jsonResponse(makeAudit()));
 
-  renderWithQueryClient(
+  renderWithProviders(
     <>
       <AuditSummary />
       <IssueList />

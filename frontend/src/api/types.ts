@@ -13,3 +13,4 @@ export type TriageResult = Schemas["TriageResult"];
 
 export type Priority = TriageResult["priority"];
 export type Impact = NonNullable<Issue["impact"]>;
+export type ReviewStatus = NonNullable<Issue["review_status"]>;
